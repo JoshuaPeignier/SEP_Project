@@ -6,6 +6,8 @@
 
 protocol Example1(I,R,M){
 
+hashfunction h;
+
 	role I { 
 		fresh K: Nonce;
 		
@@ -15,6 +17,7 @@ protocol Example1(I,R,M){
 		recv_6(M,I, {K}k(I,M) );
 		claim(I,Secret,K);
 		claim(I,Alive);
+		claim(I,Nisynch);
 	};
 
 	role R {
@@ -24,6 +27,7 @@ protocol Example1(I,R,M){
 		send_5(R,M,   {K}k(R,M) );							// R sends an encrypted confirmation to M that they received the message K
 		claim(R,Secret,K);
 		claim(R,Alive);
+		claim(R,Nisynch);
 	};
 
 	role M {
@@ -37,6 +41,7 @@ protocol Example1(I,R,M){
 		send_6(M,I,   {K}k(I,M) );					   // M sends to I an encrypted confirmation that R received K
 		claim(M,Secret,K);
 		claim(M,Alive);
+		claim(M,Nisynch);
 	};
 
 };
