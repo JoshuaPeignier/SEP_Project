@@ -12,8 +12,8 @@ hashfunction h;
 		fresh K: Nonce;
 		
 		send_1(I,M,  I,R);									// I informs M that they want to communicate with R
-		recv_2(M,I,  {R}k(I,M) );
-		send_3(I,M,  {R,K}k(I,M) );						// I sends to M an encrypted message K that they want M to send to R
+		recv_2(M,I,  {h(R)}k(I,M) );
+		send_3(I,M,  {h(R),K}k(I,M) );						// I sends to M an encrypted message K that they want M to send to R
 		recv_6(M,I, {K}k(I,M) );
 		claim(I,Secret,K);
 		claim(I,Alive);
@@ -23,7 +23,7 @@ hashfunction h;
 	role R {
 		var K: Nonce;
 
-		recv_4(M,R,   {I,R,K}k(R,M) );							// Deleting the R in this event results in non aliveness
+		recv_4(M,R,   {I,K}k(R,M) );							// Deleting the R in this event results in non aliveness
 		send_5(R,M,   {K}k(R,M) );							// R sends an encrypted confirmation to M that they received the message K
 		claim(R,Secret,K);
 		claim(R,Alive);
@@ -34,9 +34,9 @@ hashfunction h;
 		var K: Nonce;
 
 		recv_1(I,M,    I,R);
-		send_2(M,I,    {R}k(I,M));					     // M sends an encrypted request of confirmation from I  that they want to communicate with R
-		recv_3(I,M,    {R,K}k(I,M) );
-		send_4(M,R,   {I,R,K}k(R,M) );			            // M sends to R an encrypted message containing the identity of I and the message K // Deleting the R in this event results in non aliveness
+		send_2(M,I,    {h(R)}k(I,M));					     // M sends an encrypted request of confirmation from I  that they want to communicate with R
+		recv_3(I,M,    {h(R),K}k(I,M) );
+		send_4(M,R,   {I,K}k(R,M) );			            // M sends to R an encrypted message containing the identity of I and the message K // Deleting the R in this event results in non aliveness
 		recv_5(R,M,   {K}k(R,M) );
 		send_6(M,I,   {K}k(I,M) );					   // M sends to I an encrypted confirmation that R received K
 		claim(M,Secret,K);
