@@ -1,0 +1,39 @@
+/* 
+ * Test Protocol
+ */
+
+// The protocol description
+
+protocol Example1(I,R,M){
+
+	role I { 
+		fresh K: Nonce;
+		
+		send_1(I,M,  I,R);									// I informs M that they want to communicate with R
+		recv_2(M,I,  {R}k(I,M) );
+		send_3(I,M,  {K,R}k(I,M) );						// I sends to M an encrypted message K that they want M to send to R
+		recv_6(M,I, {K}k(I,M) );
+		claim(I,Secret,K);
+	};
+
+	role R {
+		var K: Nonce;
+
+		recv_4(M,R,   {K,I}k(R,M) );
+		send_5(R,M,   {K}k(R,M) );							// R sends an encrypted confirmation to M that they received the message K
+		claim(R,Secret,K);
+	};
+
+	role M {
+		var K: Nonce;
+
+		recv_1(I,M,    I,R);
+		send_2(M,I,    {R}k(I,M));					     // M sends an encrypted request of confirmation from I  that they want to communicate with R
+		recv_3(I,M,    {K,R}k(I,M) );
+		send_4(M,R,   {K,I}k(R,M) );			            // M sends to R an encrypted message containing the identity of I and the message K
+		recv_5(R,M,   {K}k(R,M) );
+		send_6(M,I,   {K}k(I,M) );					   // M sends to I an encrypted confirmation that R received K
+		claim(M,Secret,K);
+	};
+
+};
