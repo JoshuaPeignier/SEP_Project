@@ -1,15 +1,55 @@
 \documentclass{article}
-
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[francais]{babel}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 
+\usepackage{amsmath}
 \usepackage{tikz}
 
-\title{SEP - Projet}
+\title{SEP Project}
 \author{Joshua Peignier \and Solène Mirliaz}
+\date{\today}
+
 \begin{document}
 \maketitle
+
 \section{Protocole}
+\begin{align*}
+    A & \rightarrow S : senc(<K, hash(B)>, k_{SA})
+      & \text{A confirme et donne son message}\\
+    S & \rightarrow B : senc(<K, A>, k_{SB})
+      & \text{S transmet à B, avec l'identité de A}\\
+    B & \rightarrow A : hash(K)
+      & \text{B confirme réception (et son identité)}\\
+\end{align*}
+
+\paragraph{Connaissances initiales: } Au début du protocole, chaque role A et B connait une clé symmetrique publique $k_{AS}$ et $k_{BS}$. Ces clés sont également connues du role S.
+
+\paragraph{Valeurs générées au cours du protocole: } K est un nonce généré par A au début du protocole.
+
+\paragraph{Description du protocole: } La première étape du protocole est initiée par le A, qui envoie le nonce K et un hachage du destinataire B, le tout encodé avec la clé symmetrique $k_{SB}$ dont il dispose, à S.
+%
+À la réception, S peut déchiffrer le contenu du message c'est-à-dire K et $hash(K)$. Il peut comparer le hachage reçu avec celui de B pour attester que la communication se fait bien avec B.
+%
+Ensuite, S transmet le message, avec le nom de l'envoyeur, à B, le tout encodé avec la clé symmetrique $k_{SB}$.
+%
+B peut décrypter ce message et à donc accès à la donnée K ainsi qu'au nom de l'agent avec lequel il a communiqué.
+%
+C'est par un simple hachage que la preuve de réception va être transmise de B à A.
+
+\paragraph{Propriétés de sécurité: }
+\emph{Authentification}: Le message <K, A> reçu par B, provient bien d'un envoi par A de K à B.
+%Un attaquant ne peut pas forger un tel message car il ne dispose pas de la clé $k_{SB}$. Il doit donc le récupérer directement dans un échange entre agents honnêtes. Seul le rôle S peut le forger. Mais S doit au préalable recevoir $senc(<K, hash(B)>, k_{SA})$. Un attaquant ne peut pas forger ce message, car il ne dispose pas de la clé $k_{SA}$. Il doit donc le récupérer. Or, ce message ne peut être forgé que par A, quand il désire communiquer K à B. Le K reçu par B et provenant d'un prétendu agent A ne peut donc être reçu par B que si A l'a effectivement envoyé.
+\emph{Confidentialité}: La donnée K reste secrète entre les agents A, B et S. Un attaquant ne peut pas décoder un message pour en apprendre plus sur K.
+\emph{Synchronisation}: Si A termine en ayant envoyé K à B, alors B a bien reçu K.
+
+\paragraph{Poids du protocole: }
+\begin{itemize}
+    \item Règle 1: $1 + ((50 + 1 + 1 + 1) + 1) = 55$
+    \item Règle 2: $1 + ((50 + 1 + 1) + 1) = 54$
+    \item Règle 3: $1 + 1 = 2$
+\end{itemize}
+Le coût total est donc de \textbf{111}.
 \end{document}
+
