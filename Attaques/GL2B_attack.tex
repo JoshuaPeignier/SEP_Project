@@ -1,0 +1,113 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{fullpage}
+
+%opening
+\title{Attaque du protocole de l'équipe GL2B}
+\author{par l'Equipe Stone Jaws}
+\date{7 octobre 2018}
+
+\begin{document}
+
+\maketitle
+
+\section{Le protocole}
+
+Considérons 3 rôles $i$, $r$, et $m$ (que l'on appellera respectivement initiateur, récepteur, et serveur). La sémantique (en utilisant les notations de \cite{cas}) de ce protocole est alors donnée par :
+\begin{eqnarray*}
+	TdSD(i) & = & \{ (i,r,m, K, n_1, K_{im}), \\
+		& & \texttt{send}_1(i,m, \textrm{senc}((K,r),K_{im}) ),\\
+		& & \texttt{send}_3(i,r, \textrm{senc}(n_1,K) ),\\
+		& & \texttt{recv}_4(r,i, \langle h(n_1), \textrm{senc}(n_2,K) \rangle),\\
+		& & \texttt{send}_5(i,r, h(n_2))\}
+\end{eqnarray*}
+\begin{eqnarray*}
+	TdSD(r) & = & \{ (i,r,m, n_2, K_{rm}), \\
+		& & \texttt{recv}_2(m,r, \textrm{senc}((U,i),K_{rm}) ),\\
+		& & \texttt{recv}_3(i,r, \textrm{senc}(V,U)),\\
+		& & \texttt{send}_4(r,i, \langle h(V), \textrm{senc}(n_2,U) \rangle),\\
+		& & \texttt{recv}_5(i,r, h(n_2))\}
+\end{eqnarray*}
+\begin{eqnarray*}
+	TdSD(m) & = & \{ (i,r,m, K_{rm}, K_{im}), \\
+		& & \texttt{recv}_1(i,m, \textrm{senc}(\langle U,r \rangle,K_{im}) ),\\
+		& & \texttt{send}_2(m,r, \textrm{senc}(\langle U,i \rangle,K_{rm}) )\}
+\end{eqnarray*}
+
+
+\begin{center}
+
+\begin{figure}
+\begin{tikzpicture}
+  \draw(-7,8.8) rectangle (-3.8,6.7);
+	\draw (-7,8.5) node[right]{Run 1 créée par $A$};
+	\draw (-7,8) node[right]{$i \leftarrow A$};
+	\draw (-7,7.5) node[right]{$r \leftarrow B$};
+	\draw (-7,7) node[right]{$m \leftarrow S$};
+
+	\draw(4,8.8) rectangle (7.5,6.7);
+	\draw (4,8.5) node[right]{Run 2 créée par $A$};
+	\draw (4,8) node[right]{$i \leftarrow B$};
+	\draw (4,7.5) node[right]{$r \leftarrow A$};
+	\draw (4,7) node[right]{$m \leftarrow S$};
+
+	\draw (-7,6) node{$A$} ;
+	\draw[->]  (-6,6) -- node[above]{$\langle K, B\rangle_{K_{AS}}$} (-1,6);
+	\draw (0,6) node{$C(S)$} ;
+	\draw[->]  (0,5.8) -- (0,5.2) ;
+	\draw (0,5) node{$C(S)$} ;
+	\draw[->]  (1,5) -- node[above]{$\langle K, B\rangle_{K_{AS}}$} (6,5) ;
+	\draw (7,5) node{$A$} ;
+
+	\draw (-7,4) node{$A$} ;
+	\draw[->]  (-6,4) -- node[above]{$\{n_1\}_K$} (-1,4);
+	\draw (0,4) node{$C$} ;
+	\draw[->]  (0,3.8) -- (0,3.2) ;
+	\draw (0,3) node{$C$} ;
+	\draw[->]  (1,3) -- node[above]{$\{n_1\}_K$} (6,3) ;
+	\draw (7,3) node{$A$} ;
+
+	\draw (7,2) node{$A$} ;
+	\draw[->]  (6,2) -- node[above]{$h(n_1), \{n_2\}_K$} (1,2);
+	\draw (0,2) node{$C$} ;
+	\draw[->]  (0,1.8) -- (0,1.2) ;
+	\draw (0,1) node{$C$} ;
+	\draw[->]  (-1,1) -- node[above]{$h(n_1), \{n_2\}_K$} (-6,1) ;
+	\draw (-7,1) node{$A$} ;
+
+	\draw (-7,0) node{$A$} ;
+	\draw[->]  (-6,0) -- node[above]{$h(n_2)$} (-1,0);
+	\draw (0,0) node{$C$} ;
+	\draw[->]  (0,-0.8) -- (0,-0.2) ;
+	\draw (0,-1) node{$C$} ;
+	\draw[->]  (1,-1) -- node[above]{$h(n_2)$} (6,-1) ;
+	\draw (7,-1) node{$A$} ;
+\end{tikzpicture}
+\caption{Attaque du protocole GL2B}
+\label{fig1}
+\end{figure}
+\end{center}
+
+
+
+\section{Attaque sur le protocole}
+L'attaque est représentée sur la Figure \ref{fig1} et fonctionne comme suit : Alice ($A$) exécute le protocole une fois (dans la Run $1$) en tant qu'initiateur et veut s'adresser à Bob ($B$), et une autre fois (dans la Run $2$) en tant que récepteur avec $B$ dans le rôle d'initiateur. On notera $A_1$ et $A_2$ pour distinguer l'agent $A$ en tant qu'acteur des Runs $1$ et $2$.\\
+\begin{enumerate}
+\item $A_1$ envoie un premier message $\langle K, B\rangle_{K_{AS}}$ au serveur, qui est intercepté par un agent malveillant $C$. Celui redirige exactement ce message à $A_2$, qui croit que $B$ désire communiquer avec lui par l'intermédiaire du serveur.
+\item De même, le message $\{n_1\}_K$ de $A_1$ pour $B$ est intercepté par $C$ qui le redirige vers $A_2$
+\item $A_2$ envoie alors à $B$ le nonce décrypté, ainsi que qu'un nonce frais $\langle h(n_1) , \{n_2\}_K\rangle$, mais ce message est de nouveau intercepté et redirigé vers $A_1$.
+\item $A_1$ pense alors que $B$ lui a envoyé le nonce qu'il a réussi à décrypter et qu'il lui envoit son propre challenge. $A_1$ répond au challenge par un message $h(n_2)$ à destination de $B$. L'attaquant l'intercepte et le redirige vers $A_2$, qui pense donc avoir la réponse de $B$ à son challenge.
+\end{enumerate}
+
+On remarque alors que deux des propriétés exigées ne sont pas vérifiées :
+\begin{itemize}
+\item Dans cet exemple, l'initiateur $A$ de la Run $1$ envoie un message à un récepteur $B$ et termine le protocole alors que le récepteur n'a pas reçu le message.
+\item De plus, le récepteur $A$ de la Run $2$ croit recevoir une donnée d'un initiateur $B$ qui ne l'a en fait jamais envoyée.
+\end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{ref.bib}
+
+\end{document}
