@@ -1,0 +1,46 @@
+/* 
+ * Test Protocol
+ */
+
+// The protocol description
+
+protocol Example1(I,R,M){
+
+hashfunction h;
+
+	role I { 
+		fresh K: Nonce;
+		var Nb: Nonce;
+		var Kab: Nonce;
+		
+		recv_1(M,I, {R,Kab}k(I,M) );
+		send_3(I,R, {K}Kab);
+		recv_4(R,I, {Nb, h(K)}Kab);
+		send_5(I,R, {Nb}Kab);
+		claim(I,Secret,K);
+		claim(I,Alive);
+		claim(I,Nisynch);
+	};
+
+	role R {
+		fresh Nb: Nonce;
+		var K: Nonce;
+		var Kab: Nonce;
+
+		recv_2(M,R, {I,Kab}k(R,M) );
+		recv_3(I,R, {K}Kab);
+		send_4(R,I, {Nb, h(K)}Kab);
+		recv_5(I,R, {Nb}Kab);
+		claim(R,Secret,K);
+		claim(R,Alive);
+		//claim(R,Nisynch);
+	};
+
+	role M {
+		fresh Kab: Nonce;
+
+		send_1(M,I, {R,Kab}k(I,M) );
+		send_2(M,R, {I,Kab}k(R,M) );
+	};
+
+};
