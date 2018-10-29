@@ -1,0 +1,44 @@
+/*
+ * Test Protocol
+ */
+
+// The protocol description
+
+protocol Example1(I,R,M){
+
+hashfunction h;
+
+	role I {
+		fresh K: Nonce;
+		var n: Nonce;
+
+		send_1(I,M, {K,h(R)}k(I,M) ); // I informs M that they want to send K to R
+		recv_3(R,I, {n}K );
+		send_4(I,R, h(n) );           // I confirms the reception of n to R and proves it knows K
+		claim(I,Secret,K);
+		claim(I,Alive);
+		claim(I,Nisynch);
+	};
+
+	role R {
+		var K: Nonce;
+		fresh n: Nonce;
+
+		recv_2(M,R, {K,I}k(R,M) );
+		send_3(R,I, {n}K );            // R sends a nonce encoded with K, confirming reception and asking a proof of aliveness to I
+		recv_4(I,R, h(n) );
+		claim(R,Secret,K);
+		claim(R,Alive);
+		claim(R,Nisynch);
+	};
+
+	role M {
+		var K: Nonce;
+
+		recv_1(I,M, {K,h(R)}k(I,M) );
+		send_2(M,R, {K,I}k(R,M) );  // M sends K and the identity of I to R
+		claim(M,Secret,K);
+		claim(M,Nisynch);
+	};
+
+};
