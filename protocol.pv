@@ -18,6 +18,10 @@ fun id(key):identity.			(* role associated to a symmetric key shared with the se
 (* equational theory for symmetric encryption *)
 equation forall x:bitstring, y:key; sdec(senc(x,y),y) = x.
 
+
+
+
+
 (* events *)
 	event reach.
 	event acceptI(identity, identity, key,    (* bitstring, *) bitstring).
@@ -31,6 +35,10 @@ equation forall x:bitstring, y:key; sdec(senc(x,y),y) = x.
 	query attacker(new n).
 	query x:key, y:bitstring (*, z:bitstring *) ; event(acceptI(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startR(id(k_im),id(k_rm),x,y (*,z*) )). 
 	query x:key, y:bitstring (*, z:bitstring *) ; event(acceptR(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startI(id(k_im),id(k_rm),x,y (*,z*) )).      
+
+
+
+
 
 (* initiator process *)
 let Pi(ki:key, r:identity) = 
@@ -62,7 +70,7 @@ let Pm (ki:key,kr:key) = in(c, x:bitstring);
 		  out(c, senc((  (*ni,*)  id(ki),k),kr)).
 
 
+
+
 (* main process *)
 process  ( Pi(k_im, id(k_rm)) | Pr(k_rm) | Pm(k_im,k_rm) )
-(* process ( ! Pi(ska, pk(skc)) | ! Pi(ska, pk(skb)) | ! Pi(skb, pk(ska)) | ! Pi(skb, pk(skc)) | ! Pr(ska) | ! Pr(skb) | out(c,pk(ska)) | out(c, pk(skb)) | out(c, skc)  ) *)
-
