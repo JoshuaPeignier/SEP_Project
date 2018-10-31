@@ -1,67 +1,65 @@
 (* declaring a free channel name *)
 free c:channel.
 
-(* declaring additional types; type bitstring is a default type *)
+(* declaring additional types; type bitstring is a default type ; type key models symmetric keys*)
 type key.
 type identity.
 
 (* declaring private names *)
 free k_im, k_rm:key [private]. 
 
-(* Public key cryptography *)
+(* Symmetric key cryptography *)
 fun senc(bitstring, key):bitstring. 	(* symmetric encryption *)
 fun sdec(bitstring, key):bitstring.	(* symmetric decryption *)
 fun h(bitstring):bitstring.		(* hash function *)
-fun id(key):identity.
+fun id(key):identity.			(* role associated to a symmetric key shared with the server *)
 
 
-(* equational theory for pk encryption *)
+(* equational theory for symmetric encryption *)
 equation forall x:bitstring, y:key; sdec(senc(x,y),y) = x.
 
 (* events *)
-	(* declare events here *)
 	event reach.
-	event acceptI(identity, identity, key, bitstring).
-	event acceptR(identity, identity, key, bitstring).
-	event startR(identity, identity, key, bitstring).
-	event startI(identity, identity, key, bitstring).
+	event acceptI(identity, identity, key,    (* bitstring, *) bitstring).
+	event acceptR(identity, identity, key,    (* bitstring, *) bitstring).
+	event startR(identity, identity, key,    (* bitstring, *) bitstring).
+	event startI(identity, identity, key,    (* bitstring, *) bitstring).
 
 (* queries *)
-	(* fill in queries here *)
 	query event(reach).
-	(* query attacker(new nb[ pki = pk(ska)]) *) (* tests the secrecy of nb in runs where pki = pk(ska) *)
 	query attacker(new k).
 	query attacker(new n).
-	query x:key, y:bitstring ; event(acceptI(id(k_im),id(k_rm),x,y)) ==> event(startR(id(k_im),id(k_rm),x,y)). 
-	query x:key, y:bitstring ; event(acceptR(id(k_im),id(k_rm),x,y)) ==> event(startI(id(k_im),id(k_rm),x,y)).      
+	query x:key, y:bitstring (*, z:bitstring *) ; event(acceptI(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startR(id(k_im),id(k_rm),x,y (*,z*) )). 
+	query x:key, y:bitstring (*, z:bitstring *) ; event(acceptR(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startI(id(k_im),id(k_rm),x,y (*,z*) )).      
 
 (* initiator process *)
 let Pi(ki:key, r:identity) = 
-	 new k:key; 
-	 out(c, senc((k,r), ki));
+	 new k:key;
+	 (*   new nonce_i:bitstring;    *) 
+	 out(c, senc((k,r   (* ,nonce_i *)   ), ki));
 	 in(c, x:bitstring);
-	 let (n:bitstring) = sdec(x, k) in 
-	 event startI(id(ki),r,k,n);
+	 let (    (* =nonce_i, *)    n:bitstring) = sdec(x, k) in 
+	 event startI(id(ki),r,k,n (*,nonce_i*)  );
 	 out(c, h(n));
-	 event acceptI(id(ki),r,k,n).
+	 event acceptI(id(ki),r,k,n (*,nonce_i*)  ).
 	 
 
 (* responder process *)
 let Pr (kr:key)= in(c, x:bitstring);
-		  let (i:identity , k:key) = sdec(x, kr) in
+		  let (  (* ni:bitstring,*)  i:identity , k:key) = sdec(x, kr) in
 		  new n:bitstring;
-		  event startR(i,id(kr),k,n);
-		  out(c, senc(n,k) );
+		  event startR(i,id(kr),k,n  (*,ni*)  );
+		  out(c, senc((  (*ni,*)  n),k) );
 		  in(c, y:bitstring);
 		  let (=h(n)) = y in 
 		  event reach;
-		  event acceptR(i,id(kr),k,n).
+		  event acceptR(i,id(kr),k,n  (*,ni*)  ).
 
 
 (* server process *)
 let Pm (ki:key,kr:key) = in(c, x:bitstring);
-	 	  let (k:key , =id(kr)) = sdec(x,ki) in
-		  out(c, senc((id(ki),k),kr)).
+	 	  let (k:key , =id(kr)  (* , ni:bitstring *)    ) = sdec(x,ki) in
+		  out(c, senc((  (*ni,*)  id(ki),k),kr)).
 
 
 (* main process *)
