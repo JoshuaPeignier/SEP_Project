@@ -6,7 +6,7 @@ type key.                               (* symmetric keys *)
 type identity.                          (* roles *)
 
 (* declaring private names *)
-free k_im, k_rm, k_am:key [private].          (* instances of two different symmetric keys shared between a role and the server *)
+free k_im, k_rm, k_am:key [private].          (* instances of 3 distinct symmetric keys shared between an agent and the server *)
 
 (* Symmetric key cryptography *)
 fun senc(bitstring, key):bitstring. 	(* symmetric encryption *)
@@ -17,7 +17,6 @@ fun id(key):identity.			(* role associated to a symmetric key shared with the se
 
 (* equational theory for symmetric encryption *)
 equation forall x:bitstring, y:key; sdec(senc(x,y),y) = x.
-
 
 
 
@@ -37,8 +36,8 @@ equation forall x:bitstring, y:key; sdec(senc(x,y),y) = x.
 	(* query attacker(new k). *)         (* tests the secrecy of k *)
 	(* query attacker(new n). *)         (* tests the secrecy of n *)
         (* the following models the fact that if the role i terminates the protocol, it is required that r executed it, with the same values for k and n, and vice versa *)
-	query x:key, y:bitstring ; event(acceptI(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startR(id(k_im),id(k_rm),x,y )).  
-	query x:key, y:bitstring ; event(acceptR(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startI(id(k_im),id(k_rm),x,y)).      
+	query x:key, y:bitstring ; event(acceptI(id(k_im),id(k_rm),x,y)) ==> event(startR(id(k_im),id(k_rm),x,y )).  
+	query x:key, y:bitstring ; event(acceptR(id(k_im),id(k_rm),x,y)) ==> event(startI(id(k_im),id(k_rm),x,y)).      
 
 
 
@@ -67,7 +66,7 @@ let Pr (kr:key)=                         (* the responder obtains the identity o
 	in(c, y:bitstring);
 	let (=h(n)) = y in 
 	event reach;
-	 event acceptR(i,id(kr),k,n).
+	event acceptR(i,id(kr),k,n).
 
 
 (* server process *)
@@ -83,8 +82,8 @@ let Pm (ki:key,kr:key) =                 (* the server knows the keys it shares 
 (* process  ( Pi(k_im, id(k_rm)) | Pr(k_rm) | Pm(k_im,k_rm) ) *)
 process  (
       !Pi(k_im, id(k_rm)) | !Pi(k_im, id(k_im)) | !Pi(k_rm, id(k_rm)) | !Pi(k_rm, id(k_im))
-    | !Pi(k_im, id(k_am)) | !Pi(k_am, id(k_rm)) | !Pi(k_am, id(k_im)) | !Pi(k_rm, id(k_am))
-    | !Pr(k_am) | !Pr(k_im) | !Pr(k_rm)
+    | !Pi(k_im, id(k_am)) | !Pi(k_rm, id(k_am))
+    | !Pr(k_im) | !Pr(k_rm)
     | !Pm(k_im, k_am) | !Pm(k_am, k_rm) | !Pm(k_im, k_rm)
     | !Pm(k_am, k_im) | !Pm(k_rm, k_am) | !Pm(k_rm, k_im)
     | !Pm(k_im, k_im) | !Pm(k_am, k_am) | !Pm(k_rm, k_rm)
