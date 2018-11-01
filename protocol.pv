@@ -6,7 +6,7 @@ type key.                               (* symmetric keys *)
 type identity.                          (* roles *)
 
 (* declaring private names *)
-free k_im, k_rm:key [private].          (* instances of two different symmetric keys shared between a role and the server *)
+free k_im, k_rm, k_am:key [private].          (* instances of two different symmetric keys shared between a role and the server *)
 
 (* Symmetric key cryptography *)
 fun senc(bitstring, key):bitstring. 	(* symmetric encryption *)
@@ -34,8 +34,8 @@ equation forall x:bitstring, y:key; sdec(senc(x,y),y) = x.
 
 (* queries *)
 	query event(reach).            (* tests the reachability of the end of the protocol *)
-	query attacker(new k).         (* tests the secrecy of k *)
-	query attacker(new n).         (* tests the secrecy of n *)
+	(* query attacker(new k). *)         (* tests the secrecy of k *)
+	(* query attacker(new n). *)         (* tests the secrecy of n *)
         (* the following models the fact that if the role i terminates the protocol, it is required that r executed it, with the same values for k and n, and vice versa *)
 	query x:key, y:bitstring ; event(acceptI(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startR(id(k_im),id(k_rm),x,y )).  
 	query x:key, y:bitstring ; event(acceptR(id(k_im),id(k_rm),x,y (*,z*) )) ==> event(startI(id(k_im),id(k_rm),x,y)).      
@@ -43,15 +43,15 @@ equation forall x:bitstring, y:key; sdec(senc(x,y),y) = x.
 
 
 
-(* In the processes Pi and Pr, uncommenting the occurrences of k currently in commentaries results in ProVerif not finding the attack it currently finds *)
+(* In the processes Pi and Pr, uncommenting the occurrences of k and ki currently in commentaries results in ProVerif not finding the attack it currently finds *)
 
 
 (* initiator process *)
 let Pi(ki:key, r:identity) =             (* here the initiator does not know the key shared between r and the server, but it has to know the identity of r to contact him *)
 	 new k:key; 
-	 out(c, senc( (k,r), ki));
+	 out(c, senc( (k,r    (*, ki *)  ), ki));
 	 in(c, x:bitstring);
-	 let (n:bitstring   (*, =k*)  ) = sdec(x, k) in 
+	 let (n:bitstring    (*, =k*)    ) = sdec(x, k) in 
 	 event startI(id(ki),r,k,n);
 	 out(c, h(n));
 	 event acceptI(id(ki),r,k,n).
@@ -63,7 +63,7 @@ let Pr (kr:key)=                         (* the responder obtains the identity o
 	let (i:identity , k:key) = sdec(x, kr) in
 	new n:bitstring;
 	event startR(i,id(kr),k,n);
-	out(c, senc( (n (*,k*) ), k) );
+	out(c, senc( (n  (*,k*)  ), k) );
 	in(c, y:bitstring);
 	let (=h(n)) = y in 
 	event reach;
@@ -73,11 +73,20 @@ let Pr (kr:key)=                         (* the responder obtains the identity o
 (* server process *)
 let Pm (ki:key,kr:key) =                 (* the server knows the keys it shares with each agent ; they're given as parameters since no equations allows to derive kr from id(kr) *)
 	in(c, x:bitstring);
-	let (k:key , =id(kr) ) = sdec(x,ki) in
+	let (k:key, =id(kr)  (*, = ki*)    ) = sdec(x,ki) in
 	out(c, senc( (id(ki),k), kr)).
 
 
 
 
 (* main process *)
-process  ( Pi(k_im, id(k_rm)) | Pr(k_rm) | Pm(k_im,k_rm) )
+(* process  ( Pi(k_im, id(k_rm)) | Pr(k_rm) | Pm(k_im,k_rm) ) *)
+process  (
+      !Pi(k_im, id(k_rm)) | !Pi(k_im, id(k_im)) | !Pi(k_rm, id(k_rm)) | !Pi(k_rm, id(k_im))
+    | !Pi(k_im, id(k_am)) | !Pi(k_am, id(k_rm)) | !Pi(k_am, id(k_im)) | !Pi(k_rm, id(k_am))
+    | !Pr(k_am) | !Pr(k_im) | !Pr(k_rm)
+    | !Pm(k_im, k_am) | !Pm(k_am, k_rm) | !Pm(k_im, k_rm)
+    | !Pm(k_am, k_im) | !Pm(k_rm, k_am) | !Pm(k_rm, k_im)
+    | !Pm(k_im, k_im) | !Pm(k_am, k_am) | !Pm(k_rm, k_rm)
+    | out(c, k_am) | out(c, id(k_rm)) | out(c, id(k_im)))
+
