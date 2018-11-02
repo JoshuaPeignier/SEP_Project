@@ -1,8 +1,10 @@
 /*
- * Test Protocol
+ * Protocole Stone Jaws
  */
 
-// The protocol description
+// Le protocole permet à deux agents d'échanger un secret K.
+// Dans les conditions initiales seul I connait K et les deux agents
+// partagent chacun une clé symmetrique avec un serveur M.
 
 protocol Example1(I,R,M){
 
@@ -12,11 +14,11 @@ hashfunction h;
 		fresh K: Nonce;
 		var n: Nonce;
 
-		send_1(I,M, {K,R}k(I,M) ); // I informs M that they want to send K to R
-		recv_3(R,I, {n}K );
-		send_4(I,R, h(n) );           // I confirms the reception of n to R and proves it knows K
+		send_1(I,M, {K,R}k(I,M) ); // 1 - I informe M qu'il veut envoyer K à R
+		recv_3(R,I, {n}K );        // 3 - I reçoit de R un nonce n encodé par K
+		send_4(I,R, h(n) );        // 4 - I confirme sa connaissance de K par l'envoie du hash du nonce
 		claim(I,Secret,K);
-		claim(I,Alive);
+		claim(I,Alive, R);
 		claim(I,Nisynch);
 	};
 
@@ -24,19 +26,20 @@ hashfunction h;
 		var K: Nonce;
 		fresh n: Nonce;
 
-		recv_2(M,R, {I,K}k(R,M) );
-		send_3(R,I, {n}K );            // R sends a nonce encoded with K, confirming reception and asking a proof of aliveness to I
-		recv_4(I,R, h(n) );
+		recv_2(M,R, {I,K}k(R,M) ); // 2 - R reçoit par l'intermédiaire de M le secret K créé par I
+		send_3(R,I, {n}K );        // 3 - Pour vérifier que I connaît K et a émis ce message,
+                                           //     R lui propose un test en lui envoyant un nonce n encodé avec K
+		recv_4(I,R, h(n) );        // 4 - R reçoit de I le hash de n, prouvant que I connaît K
 		claim(R,Secret,K);
-		claim(R,Alive);
+		claim(R,Alive,I);
 		claim(R,Nisynch);
 	};
 
 	role M {
 		var K: Nonce;
 
-		recv_1(I,M, {K,R}k(I,M) );
-		send_2(M,R, {I,K}k(R,M) );  // M sends K and the identity of I to R
+		recv_1(I,M, {K,R}k(I,M) ); // 1 - M reçoit la demande de I de communiquer K à R
+		send_2(M,R, {I,K}k(R,M) ); // 2 - M transmet la demande à R, en protégeant le contenu par encodage
 		claim(M,Secret,K);
 		claim(M,Nisynch);
 	};
